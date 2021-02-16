@@ -1,356 +1,223 @@
----
-layout: page
-title: Developer Guide
----
-* Table of Contents
-{:toc}
+# Developer Guide
+* [Setting Up and Getting Started](#Setting-Up-and-Getting-Started)
+* [Design](#Design)
+    * [Architecture](#Architecture)
+    * [UI component](#Component)
+    * [Storage component](#Storage-Component)
+    * [Common classes](#Component)
+* [Implementation](#Implementation)
+* [Appendix: Requirements](#Appendix:-Requirements)
+    * [Product scope](#Product-scope)
+    * [User stories](#User-Stories)
+    * [User Cases](#Use-Cases)
+    * [Non-Functional Requirements](#Non-Functional-Requirements)
+    * [Glossary](#Glossary)
 
---------------------------------------------------------------------------------------------------------------------
 
-## **Setting up, getting started**
+## Setting Up and Getting Started
+:heavy_exclamation_mark: **Caution** Follow the steps in the following guide precisely. Things will not work out if you deviate in some steps.
 
-Refer to the guide [_Setting up and getting started_](SettingUp.md).
+First, **fork** this repo, and **clone** the fork into your computer.
+If you plan to use Intellij IDEA (highly recommended):
 
---------------------------------------------------------------------------------------------------------------------
+1. **Configure the JDK:**
+* Ensure you have the correct JDK version installed in your computer.
+* Open IntelliJ (if you are not in the welcome screen, click File → Close Project to close the existing project dialog first).
+* Set up the correct JDK version for Gradle.
+* Click Configure → Project Defaults → Project Structure
+* Click New…​ and set it to the directory of the JDK.
+2. **Import the project as a Gradle project:**
+* IntelliJ IDEA by default has the Gradle plugin installed. If you have disabled it, go to File → Settings → Plugins to re-enable them.
+* If your project involves GUI programming, similarly ensure the JavaFX plugin has not been disabled.
+* Click Import Project (or Open or Import in newer version of Intellij).
+* Locate the `build.gradle` file (not the root folder as you would do in a normal importing) and select it. Click OK.
+* If asked, choose to Open as Project (not Open as File).
+* Click OK to accept the default settings but do ensure that the selected version of Gradle JVM matches the JDK being used for the project.
+* Wait for the importing process to finish (could take a few minutes).
+* :heavy_exclamation_mark: **Note**: Importing a Gradle project is slightly different from importing a normal Java project.
+3. **Verify the setup:**
+* Run the `NusExpenses.java` and try a few commands.
 
-## **Design**
+## Design
 
-### Architecture
+##### Architecture
+![Sample - Architecture](images/Architecture.png)
 
-<img src="images/ArchitectureDiagram.png" width="450" />
+The ***Architecture Diagram*** shown gives an overview of the high-level design.
 
-The ***Architecture Diagram*** given above explains the high-level design of the App. Given below is a quick overview of each component.
+`Main` has one class named `NusExpenses`. It would perform the following functions:
 
-<div markdown="span" class="alert alert-primary">
+- At launch: Initialize the components in the correct sequence, and connect them up with each other.
+- At shut down / Exit: Shuts down the components and invokes save / cleanup methods where necessary.
 
-:bulb: **Tip:** The `.puml` files used to create diagrams in this document can be found in the [diagrams](https://github.com/se-edu/addressbook-level3/tree/master/docs/diagrams/) folder. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
+`Constants` holds a collection of frequently used static messages used by multiple other components.
 
-</div>
+The application then consists of four other components:
 
-**`Main`** has two classes called [`Main`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java). It is responsible for,
-* At app launch: Initializes the components in the correct sequence, and connects them up with each other.
-* At shut down: Shuts down the components and invokes cleanup methods where necessary.
+- `UI`: The UI of NUS Expenses Tracker (NET).
+- `Logic`: The command executor.
+- `Model`: Hold the data of NET in memory.
+- `Storage`: Read data from, and writes data to the hard disk.
 
-[**`Commons`**](#common-classes) represents a collection of classes used by multiple other components.
+One example would be the `Storage` component which defines its API in `Storage.java` as well as exposes its functionality using the same class.
 
-The rest of the App consists of four components.
+##### Component
+![Component](images/TP-Design.png)
 
-* [**`UI`**](#ui-component): The UI of the App.
-* [**`Logic`**](#logic-component): The command executor.
-* [**`Model`**](#model-component): Holds the data of the App in memory.
-* [**`Storage`**](#storage-component): Reads data from, and writes data to, the hard disk.
+##### Storage Component
+###### Storage(Load)
+![StorageComponent](images/storageDecodedDiagram.png)
 
-Each of the four components,
+###### Storage(save)
+![StorageComponent](images/storageEncodedDiagram.png)
 
-* defines its *API* in an `interface` with the same name as the Component.
-* exposes its functionality using a concrete `{Component Name}Manager` class (which implements the corresponding API `interface` mentioned in the previous point.
+API:  ```Storage.java```
 
-For example, the `Logic` component (see the class diagram given below) defines its API in the `Logic.java` interface and exposes its functionality using the `LogicManager.java` class which implements the `Logic` interface.
+The Storage Component,
+* Load function will read the text file and passing the list of string in the file
+  to the decoding class.
 
-![Class Diagram of the Logic Component](images/LogicClassDiagram.png)
+* Saving function will Encode the transaction detail and pass it back to storage
+  to save to the file.
 
-**How the architecture components interact with each other**
+The *Sequence Diagram* below shows how the components interact with each other in the scenario where the user issues the command ```search keyword```
 
-The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
+###### Search Command Sequence Diagram
+![SearchCommand Sequence Diagram](images/SearchSequenceDiagram.png)
 
-<img src="images/ArchitectureSequenceDiagram.png" width="574" />
+The following *Object Diagram* gives an overview of which objects are accessed and associated with the execution of the `Search` command.
 
-The sections below give more details of each component.
+###### Search Command Object Diagram
+![SearchCommand Object Diagram](images/SearchCommandObjectDiagram.png)
 
-### UI component
+The following *Sequence Diagram* shows how the components interact in the scenario where the user issues the `total` command.
 
-![Structure of the UI Component](images/UiClassDiagram.png)
+###### Total Command Sequence Diagram
+![Sequence](images/TotalCommandSequence.png)
 
-**API** :
-[`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The *Budget View Object Diagram* gives an overview of which objects are accessed and associated when the `budgetview` command is called, together with sample values for illustration
+###### BudgetView Object Diagram
+![Sequence](images/ViewBudgetObjectDiagram.png)
 
-The UI consists of a `MainWindow` that is made up of parts e.g.`CommandBox`, `ResultDisplay`, `PersonListPanel`, `StatusBarFooter` etc. All these, including the `MainWindow`, inherit from the abstract `UiPart` class.
+The *Budget View Sequence Diagram* shows how does components interact with each other in the scenario when user issues `budgetview` command.
+###### BudgetView Sequence Diagram
+![Sequence](images/ViewBudgetSequenceDiagram.png)
 
-The `UI` component uses JavaFx UI framework. The layout of these UI parts are defined in matching `.fxml` files that are in the `src/main/resources/view` folder. For example, the layout of the [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java) is specified in [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml)
+###### Add Command Sequence Diagram
+![Sequence](images/Add Command Activity.png)
 
-The `UI` component,
+## Implementation
+This section describes some noteworthy details on how certain features were implemented.
 
-* Executes user commands using the `Logic` component.
-* Listens for changes to `Model` data so that the UI can be updated with the modified data.
+##### Delete Feature
 
-### Logic component
+The purpose of `Delete` function is to facilitate user to remove a transaction in the TransactionList if they made a mistake.
+It extends Command and TransactionList to get the correct index to remove.
 
-![Structure of the Logic Component](images/LogicClassDiagram.png)
+Given below is an example usage scenario and how the `Report` mechanism behaves at each step.
 
-**API** :
-[`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+Step 1. The user launches the application for the first time. The TransactionList is empty.
 
-1. `Logic` uses the `AddressBookParser` class to parse the user command.
-1. This results in a `Command` object which is executed by the `LogicManager`.
-1. The command execution can affect the `Model` (e.g. adding a person).
-1. The result of the command execution is encapsulated as a `CommandResult` object which is passed back to the `Ui`.
-1. In addition, the `CommandResult` object can also instruct the `Ui` to perform certain actions, such as displaying help to the user.
+![Sample - Stage1](images/ReportFeature_Stage1.png)
 
-Given below is the Sequence Diagram for interactions within the `Logic` component for the `execute("delete 1")` API call.
+Step 2. User executes ```add Lunch at ...``` to add a new transaction. The ```add``` command will save the record into TransactionList. User will continue to add another 5 more records to the TransactionList. There are a total of 6 Transactions saved.
 
-![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
+![Sample - Stage2](images/DeleteFeature_Stage2.png)
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X) but due to a limitation of PlantUML, the lifeline reaches the end of diagram.
-</div>
+Step 3. User executes ```delete 3``` command to delete the 3rd transaction in the Expenses Tracking Application. TransactionList will be left with 5 records after User delete successfully.
 
-### Model component
+![Sample - Stage3](images/DeleteFeature_Stage3.png)
 
-![Structure of the Model Component](images/ModelClassDiagram.png)
 
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+##### Report Feature
 
-The `Model`,
+The purpose of report feature is to facilitate user to be able to generate a summary report with all the expense details user entered.
+It extends Command and TransactionList, get all the transactions and generate report with a time period.
 
-* stores a `UserPref` object that represents the user’s preferences.
-* stores the address book data.
-* exposes an unmodifiable `ObservableList<Person>` that can be 'observed' e.g. the UI can be bound to this list so that the UI automatically updates when the data in the list change.
-* does not depend on any of the other three components.
+Given below is an example usage scenario and how the report mechanism behaves at each step.
 
+Step 1. The user launches the application for the first time. The TransactionList is empty.
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** An alternative (arguably, a more OOP) model is given below. It has a `Tag` list in the `AddressBook`, which `Person` references. This allows `AddressBook` to only require one `Tag` object per unique `Tag`, instead of each `Person` needing their own `Tag` object.<br>
-![BetterModelClassDiagram](images/BetterModelClassDiagram.png)
+![Sample - Stage1](images/ReportFeature_Stage1.png)
 
-</div>
+Step 2. User executes ```add Lunch at ...``` to add a new transaction. The ```add``` command will save the record into TransactionList.
 
+![Sample - Stage2](images/ReportFeature_Stage2.png)
 
-### Storage component
+Step 3. After user enters multiple records in TransactionList, they will executes ```report /sd...``` command to generate the report with or without a time period.
 
-![Structure of the Storage Component](images/StorageClassDiagram.png)
+![Sample - Stage3](images/ReportFeature_Stage3.png)
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+In step 3, the application used an external library named **'Apache-POI'**. This library helps to generate the summary report into an Excel file with the following format:
 
-The `Storage` component,
-* can save `UserPref` objects in json format and read it back.
-* can save the address book data in json format and read it back.
+![Sample - CSV](images/CSV.JPG)
 
-### Common classes
+The following activity diagram summarizes what happens when a user executes report command:
 
-Classes used by multiple components are in the `seedu.addressbook.commons` package.
+![Sample - Report Activity Diagram](images/Report%20Activity%20Diagram.png)
 
---------------------------------------------------------------------------------------------------------------------
-
-## **Implementation**
-
-This section describes some noteworthy details on how certain features are implemented.
-
-### \[Proposed\] Undo/redo feature
-
-#### Proposed Implementation
-
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
-
-* `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
-
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
-
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
-
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
-
-![UndoRedoState0](images/UndoRedoState0.png)
-
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
-
-![UndoRedoState1](images/UndoRedoState1.png)
-
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
-
-![UndoRedoState2](images/UndoRedoState2.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
-
-</div>
-
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
-
-![UndoRedoState3](images/UndoRedoState3.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-
-</div>
-
-The following sequence diagram shows how the undo operation works:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `UndoCommand` should end at the destroy marker (X) but due to a limitation of PlantUML, the lifeline reaches the end of diagram.
-
-</div>
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-
-</div>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-![UndoRedoState4](images/UndoRedoState4.png)
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern desktop applications follow.
-
-![UndoRedoState5](images/UndoRedoState5.png)
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-![CommitActivityDiagram](images/CommitActivityDiagram.png)
-
-#### Design consideration:
-
-##### Aspect: How undo & redo executes
-
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
-
-* **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  * Cons: We must ensure that the implementation of each individual command are correct.
-
-_{more aspects and alternatives to be added}_
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
-
---------------------------------------------------------------------------------------------------------------------
-
-## **Documentation, logging, testing, configuration, dev-ops**
-
-* [Documentation guide](Documentation.md)
-* [Testing guide](Testing.md)
-* [Logging guide](Logging.md)
-* [Configuration guide](Configuration.md)
-* [DevOps guide](DevOps.md)
-
---------------------------------------------------------------------------------------------------------------------
-
-## **Appendix: Requirements**
-
+## Appendix: Requirements
 ### Product scope
+##### Target user profile
 
-**Target user profile**:
+* Has a need to manage his/her expenses
+* Is able to use command line interface (CLI)
+* Can type fast
+* Prefers typing to interaction with a graphical user interface (GUI)
+* Is comfortable using CLI apps
 
-* has a need to manage a significant number of contacts
-* prefer desktop apps over other types
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
+##### Value proposition:
+To manage all expenses faster than a typical excel budget spreadsheet.
 
-**Value proposition**: manage contacts faster than a typical mouse/GUI driven app
+### User Stories
+###### *Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`*
+
+|Priority|Version| As a ... | I want to ... | So that I can ...|
+|--------|--------|----------|---------------|------------------|
+|`* * *`|v1.0|Student|see usage instructions|refer to them when I forget how to use the application|
+|`* * *`|v1.0|Student|exit the program|close the program|
+|`* * *`|v1.0|Student|add my daily expenses in the system|add the information into the system and keep track of my daily expenses|
+|`* * *`|v1.0|Student|view all my transactions by category in the system|be aware of what I have added|
+|`* * *`|v1.0|Student|remove my daily expense in the system|remove the transactions|
+|`* * *`|v1.0|Student|search for an expenses with keyword in the system|filter out the expenses that I want to see|
+|`* * *`|v1.0|Student|see the total expense incurred in the system|be aware of my spending|
+|`* * *`|v2.0|Student|update my expenses in the system|update the transactions|
+|`* * *`|v2.0|Student|Save all transactions to a readable text file and load from it|I can have a copy of transaction history.|
+|`* *`|v2.0|Student|categorize my daily expense in the system|better managed/view my expenses|
+|`* *`|v2.0|Student|add a budget in the system||
+|`* *`|v2.0|Student|delete a budget in the system||
+|`* *`|v2.0|Student|view the budget with respect to expenses in the system||
+|`* *`|v2.0|Student|view the transactions in the system with a specific time period|I can find the specific transaction more easily|
+|`* *`|v2.0|Student|generate and export a transactions report summary with a specific time period|keep a copy and view them outside the system|
+|`*`|v2.0|Student|make sure I input daily expenses|I can keep track of it|
+|`*`|v2.0|Student|make sure I input daily expenses|I can keep track of it|
+|`*`|v2.0|Student|view tips on saving money|have motivation to achieve my goal|
+|`*`|v3.0|Student|save all budget to a readable text file and load from it|I can keep track of the budget history.|
 
 
-### User stories
+:point_right: View [User Stories on our Trello Board](https://trello.com/b/2290RLsD/nusexpenseshelper "User Stories on Trello~")
 
-Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
+### Use Cases
 
-| Priority | As a …​                                    | I want to …​                     | So that I can…​                                                        |
-| -------- | ------------------------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `* * *`  | new user                                   | see usage instructions         | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person               |                                                                        |
-| `* * *`  | user                                       | delete a person                | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name          | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details   | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name           | locate a person easily                                                 |
+###### (For all use cases below, the System is the `NUS Expenses Tracker` and the Actor is the `NUS Student`)
 
-*{More to be added}*
+###### Use Case Diagram
+![NUS Expenses Tracker - UC](images/NUSExpenseTrackerUCDiagram.png)
 
-### Use cases
+### Non Functional Requirements
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
-
-**Use case: Delete a person**
-
-**MSS**
-
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
-
-    Use case ends.
-
-**Extensions**
-
-* 2a. The list is empty.
-
-  Use case ends.
-
-* 3a. The given index is invalid.
-
-    * 3a1. AddressBook shows an error message.
-
-      Use case resumes at step 2.
-
-*{More to be added}*
-
-### Non-Functional Requirements
-
-1.  Should work on any _mainstream OS_ as long as it has Java `11` or above installed.
-2.  Should be able to hold up to 1000 persons without a noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+1. Should work on any mainstream OS as long it has Java ```11``` or above installed.
+2. User will be able to interact with the systems with regular english text. For example: (```
+   add chicken rice $4.00 2020-11-01 /C FOOD. ```).
+3. Will be able to handle up to 1000 expenses without noticeable slowness in performance for typical usage.
+4. User will be able to interact with their expenses.txt if they wish to make amendment.
 
 ### Glossary
 
-* **Mainstream OS**: Windows, Linux, Unix, OS-X
-* **Private contact detail**: A contact detail that is not meant to be shared with others
-
---------------------------------------------------------------------------------------------------------------------
-
-## **Appendix: Instructions for manual testing**
-
-Given below are instructions to test the app manually.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** These instructions only provide a starting point for testers to work on;
-testers are expected to do more *exploratory* testing.
-
-</div>
-
-### Launch and shutdown
-
-1. Initial launch
-
-   1. Download the jar file and copy into an empty folder
-
-   1. Double-click the jar file Expected: Shows the GUI with a set of sample contacts. The window size may not be optimum.
-
-1. Saving window preferences
-
-   1. Resize the window to an optimum size. Move the window to a different location. Close the window.
-
-   1. Re-launch the app by double-clicking the jar file.<br>
-       Expected: The most recent window size and location is retained.
-
-1. _{ more test cases …​ }_
-
-### Deleting a person
-
-1. Deleting a person while all persons are being shown
-
-   1. Prerequisites: List all persons using the `list` command. Multiple persons in the list.
-
-   1. Test case: `delete 1`<br>
-      Expected: First contact is deleted from the list. Details of the deleted contact shown in the status message. Timestamp in the status bar is updated.
-
-   1. Test case: `delete 0`<br>
-      Expected: No person is deleted. Error details shown in the status message. Status bar remains the same.
-
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
-
-1. _{ more test cases …​ }_
-
-### Saving data
-
-1. Dealing with missing/corrupted data files
-
-   1. _{explain how to simulate a missing/corrupted file, and the expected behavior}_
-
-1. _{ more test cases …​ }_
+- *MainStream OS* - Windows, Linux, Unix, OS-X
+- NET - NUS Expenses Tracker
+- Regex - Regular Expressions
+- JDK - Java Development Kit - [Java SE](https://www.oracle.com/sg/java/technologies/javase-downloads.html "Java SE Downloads")
+- Gradle - Gradle Build Tool - [Gradle User Manual](https://docs.gradle.org/current/userguide/userguide.html "Build Automation Tool - Docs")
+- Intellij / IDE - Intellij Integrated Development Environment - [IntelliJ IDEA](https://www.jetbrains.com/idea/ "JVM IDE")
+- Plugin - IDE Plugins - [Intellij IDEA Plugins](https://www.jetbrains.com/help/idea/managing-plugins.html "Manage plugins")
